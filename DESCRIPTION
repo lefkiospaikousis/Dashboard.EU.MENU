@@ -1,0 +1,32 @@
+Package: Dashboard-EU_MENU
+Title: EU MENU Dashboard
+Version: 1.0.0
+Authors@R: person('Lefkios', 'Paikousis', email = 'lefkiospaikousis@yahoo.com', role = c('cre', 'aut'))
+Description: Dashboard for exploring EU MENU data.
+License: What license is it under?
+Imports: 
+    attempt,
+    config (>= 0.3.1),
+    dplyr,
+    DT,
+    ggplot2,
+    glue,
+    golem (>= 0.3.1),
+    htmltools,
+    purrr,
+    readxl,
+    scales,
+    shiny (>= 1.6.0),
+    shinyFeedback,
+    shinyjs,
+    shinyWidgets,
+    stringr,
+    tibble,
+    tidyr,
+    waiter,
+    writexl
+Encoding: UTF-8
+LazyData: true
+RoxygenNote: 7.1.1
+Depends: 
+    R (>= 2.10)
