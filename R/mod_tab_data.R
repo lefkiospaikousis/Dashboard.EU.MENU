@@ -19,23 +19,21 @@ mod_tab_data_ui <- function(id){
            ),
            tabPanel(title = "Participants", 
                     h3("Participants in the food survey"), 
-                    selectInput(ns("row_var"), "Row var", choices = c("gender", "area", "pop_class")),
-                    selectInput(ns("col_var"), "Row var", choices =  c("gender", "area", "pop_class")),
                     DT::dataTableOutput(ns("participants")),
                     div(id = ns("down_participants"))
            ),
-           
-           # tabPanel(title = "FoodEx1",
-           #          h3("The FoodEx1 food classification system"),
-           #          DT::dataTableOutput(ns("foodex1"))
-           # ),
-           
            tabPanel(title = "Survey Samples",
                     h3("The FoodSurvey sample sizes"),
-                    p("The table shows the sample size [% (N)] of participants"),
+                    p("The tables show the sample size [% (N)] of participants"),
+                    hr(),
+                    # selectInput(ns("row_var"), "Row var", choices = c("gender", "area", "pop_class")),
+                    # selectInput(ns("col_var"), "Row var", choices =  c("gender", "area", "pop_class")),
+                    h4("Gender by Population class"),
                     tableOutput(ns("freq_gender_age")),
                     div(id=ns("freq1")),
                     p(" "),
+                    hr(),
+                    h4("Area by Population class"),
                     tableOutput(ns("freq_district_area")),
                     div(id=ns("freq2"))
                     
@@ -127,11 +125,11 @@ mod_tab_data_server <- function(id){
         janitor::adorn_percentages() %>% 
         janitor::adorn_pct_formatting() %>% 
         janitor::adorn_ns() %>% 
-        janitor::untabyl() 
+        janitor::untabyl() %>% 
+        rename(Gender = gender)
     })
     
     output$freq_gender_age <- renderTable({freq_gender_age()})
-    
     
     freq_district_area <- reactive({
       
@@ -144,18 +142,11 @@ mod_tab_data_server <- function(id){
         janitor::adorn_percentages() %>% 
         janitor::adorn_pct_formatting() %>% 
         janitor::adorn_ns() %>% 
-        janitor::untabyl() 
+        janitor::untabyl()  %>% 
+        rename(Area = area)
     })    
     
     output$freq_district_area <- renderTable({freq_district_area()})
-    
-    
-    
-    
-    
-    
-    
-    
     
     
     # Return ------------------------------------------------------------------

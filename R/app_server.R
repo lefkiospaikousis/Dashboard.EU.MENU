@@ -26,7 +26,12 @@ app_server <- function( input, output, session ) {
     
   })
   
+  # observe({
+  #   shinyjs::toggleState("explore", isTruthy(rv$dta))
+  # })
   
   mod_tab_explore_server("tab_explore_ui_1", reactive(rv$dta))
+  
+  
   
 }

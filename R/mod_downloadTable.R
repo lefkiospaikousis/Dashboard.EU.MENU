@@ -19,7 +19,7 @@ mod_downloadTable_ui <- function(id, buttonLabel  = "Download .xlsx"){
     
 #' downloadTable Server Function
 #' @param table_name String. A name to be used in the filename when downloading
-#' @param the_table A reactive element that leads to a datframe. Put it without the ()
+#' @param the_table A reactive element that leads to a dataframe. Put it without the ()
 #' @details This function saves only tables And specifically reactive tables. Havent tested it for 
 #' reactivevalues. Note the () I use in the server part. Not sure why I need this.
 #' @noRd 
