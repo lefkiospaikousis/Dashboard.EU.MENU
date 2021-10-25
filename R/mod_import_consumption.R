@@ -255,7 +255,7 @@ mod_import_consumption_server <- function(id){
       
       tagList(
         p(
-          glue("Your dataset has some errors and/or missing values. ImpoRisk can exclude these resulting in the loss of 
+          glue::glue("Your dataset has some errors and/or missing values. ImpoRisk can exclude these resulting in the loss of 
                {old_rows - new_rows} ({percent(1 - new_rows/old_rows,accuracy = 0.01)}) cases."), br(),
           "Note: Missing values from the ", strong("amountfcooked")," column will not be excluded", br(),
           "You can ",downloadLink(ns("down_problems"),"Download an .xlsx workbook with the errors found", style = "padding-bottom: 10px; padding-top: 10px" )

@@ -25,6 +25,9 @@ check_consumption_dataset <- function(dataset){
       "AREA"          , "character",  "Free text",
       "POP_CLASS"     , "character",  "EFSA population class [Infants, Toddlers, Other children, Adolescents, Adults, Elderly, Pregnant Women]",
       "WCOEFF"        , "numeric",    "Positive value",
+      "ORFOODNAME"    , "character",  "Free text",
+      "ENFOODNAME"    , "character",  "Free text",
+      "ENRECIPEDESC"  , "character",  "Free text"
     )
   
   specs$Column <- tolower(specs$Column)
@@ -77,6 +80,9 @@ check_consumption_dataset <- function(dataset){
       area          = FALSE,
       pop_class     = !pop_class %in% efsa_pop_class & !is.na(pop_class),
       wcoeff        = wcoeff<0 & !is.na(wcoeff),
+      orfoodname    = FALSE,
+      enfoodname    = FALSE,
+      enrecipedesc  = FALSE
     ) %>% 
     mutate(
       serial = if_else(rowid %in% dups_serial, TRUE, FALSE)

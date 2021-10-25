@@ -83,14 +83,14 @@ mod_tab_explore_server <- function(id, consumption){
     
     
     # Name is the Label of the filter. Value must be the actual variable name
-    filter_vars <- keep(labels_list, ~ .x %in% c("foodname", "foodex1_name", "foodex1"))
+    filter_vars <- keep(labels_list, ~ .x %in% c("foodname", "orfoodname", "enfoodname", "enrecipedesc"))
     
     
     output$filter_ui <- renderUI({
       
       purrr::imap(filter_vars, ~ col_4(
         make_filter(
-          var = consumption_sample[[.x]], id = .x, label = .y,  session = session
+          var = consumption()[[.x]], id = .x, label = .y,  session = session
         )
       )
       )
@@ -101,7 +101,7 @@ mod_tab_explore_server <- function(id, consumption){
     observe({
       
       purrr::map(filter_vars, ~ updateSelectInput(inputId = .x, 
-                                                  choices = unique(consumption_sample[[.x]]), 
+                                                  choices = unique(consumption()[[.x]]), 
                                                   selected = "")
       )
     })
@@ -110,11 +110,11 @@ mod_tab_explore_server <- function(id, consumption){
       
       # map all food selections to the foodname variable
       
-      each_var <- purrr::map(filter_vars, ~ filter_var(consumption_sample[[.x]], input[[.x]]))
+      each_var <- purrr::map(filter_vars, ~ filter_var(consumption()[[.x]], input[[.x]]))
       
       selected <- purrr::reduce(each_var, `|`)
       
-      consumption_sample[selected,] %>% pull(foodname)
+      consumption()[selected,] %>% pull(foodname) %>% unique()
       
     })
     
@@ -125,13 +125,13 @@ mod_tab_explore_server <- function(id, consumption){
     
     tbl_n_days      <- reactive({
       
-      consumption_sample %>% group_by(subjectid) %>% summarise(n_days = max(day))
+      consumption() %>% group_by(subjectid) %>% summarise(n_days = max(day))
       
     }) 
     
     tbl_weight      <- reactive({
       
-      consumption_sample %>% 
+      consumption() %>% 
         distinct(subjectid, .keep_all = TRUE) %>% select(subjectid, weight)
       
     })
@@ -139,7 +139,7 @@ mod_tab_explore_server <- function(id, consumption){
     
     tbl_population <- reactive({
       
-      consumption_sample %>% 
+      consumption() %>% 
         distinct(subjectid, .keep_all = TRUE) %>% 
         count(across(any_of(input$group_var)), name = "population")
     }) 
@@ -148,7 +148,7 @@ mod_tab_explore_server <- function(id, consumption){
     tbl_consumers <- reactive({
       
       # need to filter it for the food selected
-      consumption_sample %>% 
+      consumption() %>% 
         filter(foodname %in% food_items()) %>% 
         distinct(subjectid, .keep_all = TRUE) %>% 
         count(across(any_of(input$group_var)), name = "consumers")
@@ -164,7 +164,7 @@ mod_tab_explore_server <- function(id, consumption){
     
     chronic <- reactive({
       
-      consumption_sample %>% 
+      consumption() %>% 
         {if(input$aggregation_type == "Consumers"){
           filter(., foodname %in% food_items())
         } else {
@@ -186,7 +186,7 @@ mod_tab_explore_server <- function(id, consumption){
     
     acute <- reactive({
       
-      consumption_sample %>% 
+      consumption() %>% 
         {if(input$aggregation_type == "Consumers"){
           filter(., foodname %in% food_items())
         } else {
@@ -208,6 +208,8 @@ mod_tab_explore_server <- function(id, consumption){
     
     
     individual <- reactive({
+      
+      validate(need(consumption(), "No data uploaded"))
       
       dta <- if(input$exposure_type == "Chronic") chronic() else acute()
       

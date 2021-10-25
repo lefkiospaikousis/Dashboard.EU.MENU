@@ -48,7 +48,14 @@ impro_colours <- c(
 
 # For database checking
 vars_needed_occurrenceFdx2 <- c("termCode","N", "LB_mean", "MB_mean", "UB_mean")
-vars_needed_consumptionFdx2 <- tolower(c("SERIAL", "SUBJECTID", "DAY", "AMOUNTFOOD", "AMOUNTFCOOKED", "FOODEXCODE", "GENDER", "AGE", "WEIGHT", "AREA", "POP_CLASS", "WCOEFF"))
+vars_needed_consumptionFdx2 <- tolower(c("SERIAL", "SUBJECTID", "DAY", "AMOUNTFOOD", 
+                                         "AMOUNTFCOOKED", "FOODEXCODE", "GENDER", 
+                                         "AGE", "WEIGHT", "AREA", "POP_CLASS", 
+                                         "WCOEFF", 
+                                         
+                                         "ORFOODNAME", "ENFOODNAME", "ENRECIPEDESC"
+                                         )
+                                       )
 vars_valid_consumption_foodex1 <- tolower(c("SERIAL", "SUBJECTID", "DAY", "FOODEX1", "FOODEX1_name", "GENDER", "AGE", "WEIGHT", "AREA", "POP_CLASS", "WCOEFF"))
 vars_needed_RawOccurrence <- c("foodex2", "res_num", "lod", "t_uom")
 
@@ -86,6 +93,13 @@ labels_list <- list(
   "Amount of food (cooked)" = "amountfcooked",
   "Amount of food (raw)" = "amountfood",
   "Food name (fdx2)" = "foodname",
+  "FoodEx code" = "foodexcode",
+  "Original Food Name" = "orfoodname",
+  "Recipe description" = "enrecipedesc",
+  "English food name" = "enfoodname",
+  
+  "n_days" = "Number of days",
+  "Total" = "total",
   
   
   "grams/day" = "gr_day", 
@@ -93,6 +107,7 @@ labels_list <- list(
   
   "FoodEx1 Name" = "foodex1_name", 
   "FoodEx1" = "foodex1",
+  
   
   "Participants" = "population",
   "Consumers" = "consumers",
