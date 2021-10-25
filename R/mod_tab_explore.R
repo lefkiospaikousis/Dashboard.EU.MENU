@@ -11,22 +11,35 @@ mod_tab_explore_ui <- function(id){
   ns <- NS(id)
   tagList(
     fluidRow(
-      box(
-        col_4(
-          radioButtons(ns("aggregation_type"), "Aggregation Type", choices = c("Consumers", "Population"))
-        ),
-        col_4(
-          radioButtons(ns("exposure_type"), "Exposure Type", choices = c("Chronic", "Acute"))
-        ),
-        col_4(
-          radioButtons(ns("per_day_type"), "Per weight?", choices = c("Grams/day" = "gr_day", 
-                                                                      "Grams/day/Kg.bw"= "gr_day_kg_bw"))
-        ),
-        selectInput(ns("group_var"), "Select demographic", 
-                    multiple = TRUE,  
-                    choices = c("gender", "pop_class", "area"),
-                    selected = "gender"
-        ),
+      box(width = 5,
+          col_4(
+            radioButtons(ns("aggregation_type"), "Aggregation Type", 
+                         choices = c("Consumers", "Population"))
+          ),
+          col_4(
+            radioButtons(ns("exposure_type"), "Exposure Type", 
+                         choices = c("Chronic", "Acute"))
+          ),
+          col_4(
+            radioButtons(ns("per_day_type"), "Per weight?", 
+                         choices = c("Grams/day" = "gr_day", 
+                                     "Grams/day/Kg bw"= "gr_day_kg_bw"))
+          ),
+          selectInput(ns("group_var"), "Select demographic", 
+                      multiple = TRUE,  
+                      choices = c("Gender" = "gender", 
+                                  "Population Class" = "pop_class", 
+                                  "Area" = "area"
+                                  
+                      ),
+                      selected = ""
+          ),
+      ),
+      box(width = 7,
+          # col_4(
+          #   selectInput(ns("foodname"), "FoodEx Name", choices = NULL, multiple = TRUE)
+          # ),
+          uiOutput(ns("filter_ui"))
       )
     ),
     
@@ -46,7 +59,6 @@ mod_tab_explore_ui <- function(id){
       )
     )
     
-    #DT::DTOutput(ns("tbl_consumption"))
   )
 }
 
@@ -66,13 +78,46 @@ mod_tab_explore_server <- function(id, consumption){
       
     })
     
+    # Name is the Label of the filter. Value must be the actual variable name
+    filter_vars <- c("FoodEx Name" = "foodname", 
+                     "FoodEx1 Name" = "foodex1_name", 
+                     "FoodEx1" = "foodex1"
+    )
+    
+    
+    output$filter_ui <- renderUI({
+      
+      purrr::imap(filter_vars, ~ col_4(
+        make_filter(
+          var = consumption_sample[[.x]], id = .x, label = .y,  session = session
+        )
+      )
+      )
+      
+    })
+    
+    
+    observe({
+      
+      purrr::map(filter_vars, ~ updateSelectInput(inputId = .x, 
+                                                  choices = unique(consumption_sample[[.x]]), 
+                                                  selected = "")
+      )
+    })
     
     food_items <- reactive({
       
       # map all food selections to the foodname variable
       
-      c("Cheese, edam")
+      each_var <- purrr::map(filter_vars, ~ filter_var(consumption_sample[[.x]], input[[.x]]))
+      
+      selected <- purrr::reduce(each_var, `|`)
+      
+      consumption_sample[selected,] %>% pull(foodname)
+      
     })
+    
+    
     
     
     # Helper datasets ---------------------------------------------------------
@@ -150,11 +195,7 @@ mod_tab_explore_server <- function(id, consumption){
         group_by(across(c(subjectid, any_of(input$group_var), day))) %>% 
         summarise(total = sum(amountfood, na.rm = TRUE)) %>% 
         ungroup() %>% 
-        #left_join(tbl_n_days(), by = "subjectid") %>% 
         left_join(tbl_weight(), by = "subjectid") %>% 
-        # mutate(
-        #   total_kg_bw = total / weight
-        # ) %>% 
         mutate(
           gr_day = total,
           gr_day_kg_bw = total / weight
@@ -164,31 +205,21 @@ mod_tab_explore_server <- function(id, consumption){
     
     output$individual <- renderReactable({
       
-      if(input$exposure_type == "Chronic") {
-        
-        reactable(chronic())
-        
-      } else {
-        
-        reactable(acute())
-        
-      }
+      dta <- if(input$exposure_type == "Chronic") chronic() else acute()
+      
+      reactable(dta)
       
     })
     
     
-    
     tbl_by_demo <- reactive({
       
-      
-      if(input$exposure_type == "Chronic"){
+      if(length(food_items()) == 0) {
         
-        dta <- chronic ()
-        
-      } else {
-        
-        dta <- acute()
+        validate( "Filter your consumption data with food items")
       }
+      
+      dta <- if(input$exposure_type == "Chronic") chronic() else acute()
       
       aggregation <- 
         dta %>% 
@@ -202,11 +233,11 @@ mod_tab_explore_server <- function(id, consumption){
       
       if(!isTruthy(input$group_var)){
         
-        bind_cols(tbl_population(), tbl_consumers(), aggregation) 
+        tbl <- bind_cols(tbl_population(), tbl_consumers(), aggregation) 
         
       } else {
         
-        purrr::reduce(
+        tbl <- purrr::reduce(
           list(
             tbl_population(),
             tbl_consumers(),
@@ -214,9 +245,15 @@ mod_tab_explore_server <- function(id, consumption){
           ),
           left_join,
           by = input$group_var
-          
         ) 
+        
       }
+      
+      tbl %>% 
+        mutate(pct_cons = consumers / population) %>% 
+        mutate(
+          across(c(-any_of(input$group_var), pct_cons), ~round(., 2))
+        )
       
     })
     
