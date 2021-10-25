@@ -1,0 +1,31 @@
+#' The application server-side
+#' 
+#' @param input,output,session Internal parameters for {shiny}. 
+#'     DO NOT REMOVE.
+#' @import shiny
+#' @import dplyr
+#' @importFrom tidyr pivot_longer pivot_wider
+#' @import DT
+#' @import shinydashboard
+#' @importFrom reactable renderReactable reactable reactableOutput colDef colFormat colGroup
+#' @importFrom waiter waiter_show waiter_hide
+#' @noRd
+app_server <- function( input, output, session ) {
+  # Your application server logic 
+  
+  rv <- rv(
+    dta = NULL
+  )
+  
+  dta <- mod_tab_data_server("tab_data_ui_1")
+  
+  observeEvent(dta$trigger, {
+    
+    rv$dta <- dta$dta
+    
+  })
+  
+  
+  mod_tab_explore_server("tab_explore_ui_1", reactive(rv$dta))
+  
+}
