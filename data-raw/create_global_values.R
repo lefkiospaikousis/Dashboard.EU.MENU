@@ -70,6 +70,41 @@ aggregate_summary <- list(
   
 )
 
+labels_list <- list(
+  
+  "Gender" = "gender", 
+  "Population Class" = "pop_class", 
+  "Area" = "area",
+  "Weight" = "weight",
+  "Age" = "age",
+  "Weight coefficient" ="wcoeff",
+  "Subject ID" = "subjectid",
+  
+  
+  "Serial" = "serial",
+  "Day" = "day",
+  "Amount of food (cooked)" = "amountfcooked",
+  "Amount of food (raw)" = "amountfood",
+  "Food name (fdx2)" = "foodname",
+  
+  
+  "grams/day" = "gr_day", 
+  "grams/day/Kg bw"= "gr_day_kg_bw",
+  
+  "FoodEx1 Name" = "foodex1_name", 
+  "FoodEx1" = "foodex1",
+  
+  "Participants" = "population",
+  "Consumers" = "consumers",
+  "% of consumers" = "pct_cons",
+  "Mean" = "mean",
+  "Median" = "median",
+  "95th percentile" = "p95",
+  "Max"  = "max",
+  "Min" = "min"
+)
+
+
 usethis::use_data(
   mtx_parent
   , fdx2_chain_name
@@ -95,6 +130,7 @@ usethis::use_data(
   , impro_colours
   , internal = TRUE
   , consumption_sample
+  , labels_list
   #, internal = FALSE
   , overwrite = TRUE)
 

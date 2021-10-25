@@ -79,37 +79,8 @@ mod_tab_explore_server <- function(id, consumption){
       
     })
     
-    
-    labels_list <- list(
-      
-      "Gender" = "gender", 
-      "Population Class" = "pop_class", 
-      "Area" = "area",
-      
-      
-      "grams/day" = "gr_day", 
-      "grams/day/Kg bw"= "gr_day_kg_bw",
-      
-      "FoodEx Name" = "foodname", 
-      "FoodEx1 Name" = "foodex1_name", 
-      "FoodEx1" = "foodex1",
-      
-      "Participants" = "population",
-      "Consumers" = "consumers",
-      "% of consumers" = "pct_cons",
-      "Mean" = "mean",
-      "Median" = "median",
-      "95th percentile" = "p95",
-      "Max"  = "max",
-      "Min" = "min"
-    )
-    
-    
-    
     # Name is the Label of the filter. Value must be the actual variable name
     filter_vars <- keep(labels_list, ~ .x %in% c("foodname", "foodex1_name", "foodex1"))
-    # "FoodEx1 Name" = 
-    # "FoodEx1" = "foodex1"
     
     
     output$filter_ui <- renderUI({
@@ -143,7 +114,6 @@ mod_tab_explore_server <- function(id, consumption){
       consumption_sample[selected,] %>% pull(foodname)
       
     })
-    
     
     
     
@@ -281,7 +251,6 @@ mod_tab_explore_server <- function(id, consumption){
         mutate(pct_cons = consumers / population, .after = consumers) %>% 
         mutate(pct_cons = percent(pct_cons, 0.01)) %>% 
         mutate(
-          #across(c(-any_of(input$group_var), pct_cons), ~round(., 2))
           across(where(is.numeric), ~round(., 2))
         ) 
       
