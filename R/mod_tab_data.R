@@ -16,12 +16,12 @@ mod_tab_data_ui <- function(id){
            tabPanel(title = "Data", 
                     h3("Full consumption table"), 
                     mod_downloadTable_ui(ns("dataset")),
-                    reactableOutput(ns("consumption"))
+                    reactableOutput(ns("consumption")) %>% with_spinner()
            ),
            tabPanel(title = "Participants", 
                     h3("Participants in the food survey"), 
                     mod_downloadTable_ui(ns("participants")),
-                    DT::dataTableOutput(ns("participants")),
+                    DT::dataTableOutput(ns("participants")) %>% with_spinner(),
                     #div(id = ns("down_participants"))
            ),
            tabPanel(title = "Survey Samples",

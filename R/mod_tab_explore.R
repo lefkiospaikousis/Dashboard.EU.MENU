@@ -50,12 +50,12 @@ mod_tab_explore_ui <- function(id){
              tabPanel(title = "Statistics",
                       uiOutput(ns("title_table")),
                       mod_downloadTable_ui(ns("tbl_by_demo")),
-                      reactableOutput(ns("tbl_by_demo"))
+                      reactableOutput(ns("tbl_by_demo")) %>% with_spinner()
              ),
              tabPanel(title = "Individual",
                       uiOutput(ns("title_individual")),
                       mod_downloadTable_ui(ns("individual")),
-                      reactableOutput(ns("individual"))
+                      reactableOutput(ns("individual")) %>% with_spinner()
              )
       )
     )
