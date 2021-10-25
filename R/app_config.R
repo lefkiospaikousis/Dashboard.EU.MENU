@@ -9,7 +9,7 @@
 #' 
 #' @noRd
 app_sys <- function(...){
-  system.file(..., package = "Dashboard-EU_MENU")
+  system.file(..., package = "Dashboard.EU.MENU")
 }
 
 
