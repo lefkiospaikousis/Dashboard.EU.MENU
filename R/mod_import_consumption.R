@@ -168,7 +168,7 @@ mod_import_consumption_server <- function(id){
       types_ok   <- all(result$col_type$is_type_ok)
       content_ok <- all(result$col_content$is_content_ok)
       # cooked food can be missing
-      missing    <- result$missing %>% filter(Column != "amountfcooked") %>% .$missing
+      missing    <- result$missing %>% filter(!Column %in% c("amountfcooked", "enrecipedesc")) %>% .$missing
       missing_ok <- all(missing == 0)
       
       Sys.sleep(1)
@@ -424,7 +424,7 @@ mod_import_consumption_server <- function(id){
           tagList(
             #h3("The Consumption file specifications:"),
             shinydashboard::box(
-              solidHeader = TRUE,width = NULL,collapsible = TRUE, collapsed = FALSE, status = "warning",
+              solidHeader = TRUE,width = NULL, collapsible = TRUE, collapsed = TRUE, status = "warning",
               title = "The Consumption file specifications:",
               tags$ul(
                 tags$li(strong("Input data"), ": Consumption data with food consumption occasions at the participant level"),
