@@ -13,14 +13,16 @@ mod_tab_data_ui <- function(id){
     mod_import_consumption_ui(ns("import_consumption_ui_1")),
     tabBox(id = ns("data_tabset"), width = 12,
            
-           tabPanel(title = "FULL DATASET", 
+           tabPanel(title = "Data", 
                     h3("Full consumption table"), 
+                    mod_downloadTable_ui(ns("dataset")),
                     reactableOutput(ns("consumption"))
            ),
            tabPanel(title = "Participants", 
                     h3("Participants in the food survey"), 
+                    mod_downloadTable_ui(ns("participants")),
                     DT::dataTableOutput(ns("participants")),
-                    div(id = ns("down_participants"))
+                    #div(id = ns("down_participants"))
            ),
            tabPanel(title = "Survey Samples",
                     h3("The FoodSurvey sample sizes"),
@@ -29,21 +31,23 @@ mod_tab_data_ui <- function(id){
                     # selectInput(ns("row_var"), "Row var", choices = c("gender", "area", "pop_class")),
                     # selectInput(ns("col_var"), "Row var", choices =  c("gender", "area", "pop_class")),
                     h4("Gender by Population class"),
+                    mod_downloadTable_ui(ns("freq_gender_age")),
                     tableOutput(ns("freq_gender_age")),
                     div(id=ns("freq1")),
                     p(" "),
                     hr(),
                     h4("Area by Population class"),
-                    tableOutput(ns("freq_district_area")),
+                    mod_downloadTable_ui(ns("freq_popClass_area")),
+                    tableOutput(ns("freq_popClass_area")),
                     div(id=ns("freq2"))
                     
-           ),
-           tabPanel(title = "Data Description",
-                    h3("A description of the columns in the dataset"),
-                    #p("The table shows what each column in the data represents"),
-                    mod_downloadTable_ui(ns("tbl_data_description")),
-                    DT::dataTableOutput(ns("tbl_data_description"))
            )
+           # tabPanel(title = "Data Description",
+           #          h3("A description of the columns in the dataset"),
+           #          #p("The table shows what each column in the data represents"),
+           #          mod_downloadTable_ui(ns("tbl_data_description")),
+           #          DT::dataTableOutput(ns("tbl_data_description"))
+           # )
     )
   )
 }
@@ -61,6 +65,23 @@ mod_tab_data_server <- function(id){
     )
     
     
+    callModule(mod_downloadTable_server, "dataset",
+               table_name = "dataset",
+               the_table = reactive(rv$dta))
+    
+    callModule(mod_downloadTable_server, "participants",
+               table_name = "Participants",
+               the_table = participants)
+    
+    callModule(mod_downloadTable_server, "freq_popClass_area",
+               table_name = "AreaByPopClass",
+               the_table = freq_popClass_area)
+    
+    callModule(mod_downloadTable_server, "freq_gender_age",
+               table_name = "GenderByAge",
+               the_table = freq_gender_age)
+    
+    
     # Data --------------------------------------------------------------------
     
     dta <- mod_import_consumption_server("import_consumption_ui_1")
@@ -76,7 +97,11 @@ mod_tab_data_server <- function(id){
       
       validate(need(rv$dta, message = "No dataset is uploaded"))
       
-      reactable(rv$dta)
+      rv$dta %>% 
+        rename(!!!unlist(keep(labels_list, ~ .x %in% names(rv$dta)))) %>% 
+        reactable(
+          searchable = TRUE
+        )
       
       
     })
@@ -94,9 +119,14 @@ mod_tab_data_server <- function(id){
       
       validate(need(rv$dta, message = "No dataset is uploaded"))
       
-      rv$dta %>% 
+      tbl <- 
+        rv$dta %>% 
         distinct(subjectid, .keep_all = TRUE) %>%
-        select(subjectid, gender, pop_class, age, weight, area, wcoeff)
+        select(subjectid, gender, pop_class, age, weight, area, wcoeff) 
+      
+      tbl %>% 
+        rename(!!!unlist(keep(labels_list, ~ .x %in% names(tbl)))) %>% 
+        mutate(across(where(is.character), as.factor))
     })
     
     output$participants <- DT::renderDataTable({
@@ -105,7 +135,7 @@ mod_tab_data_server <- function(id){
         DT::datatable(
           filter = "top"
         ) %>% 
-        DT::formatRound ( c("weight", "age"), 1) 
+        DT::formatRound ( c("Weight", "Age"), 1) 
       #DT::formatRound ( c("gr_day", "gr_kbw_day"), 2) 
       
     })
@@ -131,7 +161,7 @@ mod_tab_data_server <- function(id){
     
     output$freq_gender_age <- renderTable({freq_gender_age()})
     
-    freq_district_area <- reactive({
+    freq_popClass_area <- reactive({
       
       validate(need(rv$dta, message = "No dataset is uploaded"))
       
@@ -146,7 +176,7 @@ mod_tab_data_server <- function(id){
         rename(Area = area)
     })    
     
-    output$freq_district_area <- renderTable({freq_district_area()})
+    output$freq_popClass_area <- renderTable({freq_popClass_area()})
     
     
     # Return ------------------------------------------------------------------
