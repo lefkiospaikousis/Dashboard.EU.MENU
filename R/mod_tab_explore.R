@@ -22,8 +22,8 @@ mod_tab_explore_ui <- function(id){
           ),
           col_4(
             radioButtons(ns("per_day_type"), "Per weight?", 
-                         choices = c("Grams/day" = "gr_day", 
-                                     "Grams/day/Kg bw"= "gr_day_kg_bw"))
+                         choices = c("grams/day" = "gr_day", 
+                                     "grams/day/Kg bw"= "gr_day_kg_bw"))
           ),
           selectInput(ns("group_var"), "Select demographic", 
                       multiple = TRUE,  
@@ -46,7 +46,8 @@ mod_tab_explore_ui <- function(id){
     fluidRow(
       tabBox(id = ns("tabs_explore"), width = 12,
              tabPanel(title = "Statistics",
-                      h4("Aggregated statistics"),
+                      #h4("Aggregated statistics"),
+                      uiOutput(ns("title_table")),
                       #mod_downloadTable_ui(ns("tbl_data_description")),
                       reactableOutput(ns("tbl_by_demo"))
              ),
@@ -78,11 +79,37 @@ mod_tab_explore_server <- function(id, consumption){
       
     })
     
-    # Name is the Label of the filter. Value must be the actual variable name
-    filter_vars <- c("FoodEx Name" = "foodname", 
-                     "FoodEx1 Name" = "foodex1_name", 
-                     "FoodEx1" = "foodex1"
+    
+    labels_list <- list(
+      
+      "Gender" = "gender", 
+      "Population Class" = "pop_class", 
+      "Area" = "area",
+      
+      
+      "grams/day" = "gr_day", 
+      "grams/day/Kg bw"= "gr_day_kg_bw",
+      
+      "FoodEx Name" = "foodname", 
+      "FoodEx1 Name" = "foodex1_name", 
+      "FoodEx1" = "foodex1",
+      
+      "Participants" = "population",
+      "Consumers" = "consumers",
+      "% of consumers" = "pct_cons",
+      "Mean" = "mean",
+      "Median" = "median",
+      "95th percentile" = "p95",
+      "Max"  = "max",
+      "Min" = "min"
     )
+    
+    
+    
+    # Name is the Label of the filter. Value must be the actual variable name
+    filter_vars <- keep(labels_list, ~ .x %in% c("foodname", "foodex1_name", "foodex1"))
+    # "FoodEx1 Name" = 
+    # "FoodEx1" = "foodex1"
     
     
     output$filter_ui <- renderUI({
@@ -249,21 +276,61 @@ mod_tab_explore_server <- function(id, consumption){
         
       }
       
-      tbl %>% 
-        mutate(pct_cons = consumers / population) %>% 
+      tbl <- 
+        tbl %>% 
+        mutate(pct_cons = consumers / population, .after = consumers) %>% 
+        mutate(pct_cons = percent(pct_cons, 0.01)) %>% 
         mutate(
-          across(c(-any_of(input$group_var), pct_cons), ~round(., 2))
-        )
+          #across(c(-any_of(input$group_var), pct_cons), ~round(., 2))
+          across(where(is.numeric), ~round(., 2))
+        ) 
+      
+      # rename the columns for better presentation
+      # what a messy code here.. 
+      tbl %>% 
+        rename(!!!unlist(keep(labels_list, ~ .x %in% names(tbl))))
       
     })
     
     output$tbl_by_demo <- renderReactable({
       
-      reactable(tbl_by_demo()
-                
-      )
+      reactable(tbl_by_demo())
+      
+      
     })
     
+    
+    
+    output$title_table <- renderUI({
+      
+      
+      if(!isTruthy(input$group_var)) {
+        demo <- "Overall"
+        
+      } else {
+        
+        demo <- 
+          paste0("per ",
+                 names(keep(labels_list, ~.x %in% input$group_var)) %>% 
+                   glue::glue_collapse(sep = ", ", last = " and ")
+          )
+      }
+      
+      grams_type <- names(keep(labels_list, ~ .x %in% input$per_day_type))
+      
+      tbl_title <- 
+        glue::glue(
+          "Descriptives ({grams_type}) - {input$exposure_type} consumption - {input$aggregation_type} based"
+        )
+      
+      
+      tagList(
+        h3(tbl_title),
+        h4(demo),
+        br()
+      )
+      
+    })
     
   })
 }

@@ -65,8 +65,8 @@ aggregate_summary <- list(
   mean   = ~mean(., na.rm = TRUE),
   sd     = ~sd(., na.rm = TRUE),
   median = ~median(., na.rm = TRUE),
-  max    = ~max(., na.rm = TRUE),
-  p95    = ~quantile(., 0.95)
+  p95    = ~quantile(., 0.95),
+  max    = ~max(., na.rm = TRUE)
   
 )
 
