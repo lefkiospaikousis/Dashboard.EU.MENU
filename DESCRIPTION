@@ -1,9 +1,9 @@
-Package: Dashboard-EU_MENU
+Package: Dashboard.EU.MENU
 Title: EU MENU Dashboard
 Version: 1.0.0
 Authors@R: person('Lefkios', 'Paikousis', email = 'lefkiospaikousis@yahoo.com', role = c('cre', 'aut'))
 Description: Dashboard for exploring EU MENU data.
-License: What license is it under?
+License: file LICENSE
 Imports: 
     attempt,
     config (>= 0.3.1),
@@ -15,9 +15,12 @@ Imports:
     htmltools,
     janitor,
     purrr,
+    reactable,
     readxl,
     scales,
     shiny (>= 1.6.0),
+    shinycssloaders,
+    shinydashboard,
     shinyFeedback,
     shinyjs,
     shinyWidgets,

@@ -6,6 +6,7 @@
 #' @import dplyr
 #' @importFrom tidyr pivot_longer pivot_wider
 #' @importFrom purrr keep map imap map2 reduce walk iwalk walk2
+#' @importFrom rlang .data 
 #' @import DT
 #' @import shinydashboard
 #' @importFrom reactable renderReactable reactable reactableOutput colDef colFormat colGroup
