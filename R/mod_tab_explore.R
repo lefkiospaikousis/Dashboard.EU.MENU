@@ -21,40 +21,40 @@ mod_tab_explore_ui <- function(id){
                          choices = c("Chronic", "Acute"))
           ),
           col_4(
-            radioButtons(ns("per_day_type"), "Per weight?", 
+            radioButtons(ns("per_day_type"), "Per Kg bw?", 
                          choices = c("grams/day" = "gr_day", 
                                      "grams/day/Kg bw"= "gr_day_kg_bw"))
           ),
           selectInput(ns("group_var"), "Select demographic", 
                       multiple = TRUE,  
-                      choices = c("Gender" = "gender", 
-                                  "Population Class" = "pop_class", 
-                                  "Area" = "area"
-                                  
-                      ),
+                      choices = labels_list[c("Gender", "Population Class", "Area")],
                       selected = ""
-          ),
+          )
       ),
-      box(width = 7,
-          # col_4(
-          #   selectInput(ns("foodname"), "FoodEx Name", choices = NULL, multiple = TRUE)
-          # ),
+      box(width = 6, 
           uiOutput(ns("filter_ui"))
+      ),
+      shinyWidgets::dropdownButton(inputId = ns("options"), label = "",
+                                   p(strong("Customise")),
+                                   numericInput(ns("digits"), "Decimals", 2, 0, 10, 1),
+                                   circle = FALSE, status = "primary", 
+                                   icon = icon("gear"), width = "100px",
+                                   right = TRUE,
+                                   tooltip = shinyWidgets::tooltipOptions(title = "Click for options!"),
+                                   size = "xs"
       )
     ),
     
     fluidRow(
       tabBox(id = ns("tabs_explore"), width = 12,
              tabPanel(title = "Statistics",
-                      #h4("Aggregated statistics"),
                       uiOutput(ns("title_table")),
-                      #mod_downloadTable_ui(ns("tbl_data_description")),
+                      mod_downloadTable_ui(ns("tbl_by_demo")),
                       reactableOutput(ns("tbl_by_demo"))
              ),
              tabPanel(title = "Individual",
-                      h4("Individual mean consumption"),
-                      #p("The table shows what each column in the data represents"),
-                      #mod_downloadTable_ui(ns("tbl_data_description")),
+                      uiOutput(ns("title_individual")),
+                      mod_downloadTable_ui(ns("individual")),
                       reactableOutput(ns("individual"))
              )
       )
@@ -71,13 +71,16 @@ mod_tab_explore_server <- function(id, consumption){
   moduleServer( id, function(input, output, session){
     ns <- session$ns
     
-    output$tbl_consumption <- renderDT({
-      
-      DT::datatable(
-        consumption()
-      )
-      
-    })
+    callModule(mod_downloadTable_server, "tbl_by_demo",
+               table_name = "DESCRIPTIVES",
+               the_table = tbl_by_demo)
+    
+    callModule(mod_downloadTable_server, "individual",
+               table_name = "Individual",
+               the_table = individual)
+    
+    
+    
     
     # Name is the Label of the filter. Value must be the actual variable name
     filter_vars <- keep(labels_list, ~ .x %in% c("foodname", "foodex1_name", "foodex1"))
@@ -175,7 +178,8 @@ mod_tab_explore_server <- function(id, consumption){
         mutate(
           gr_day = total / n_days,
           gr_day_kg_bw = total / n_days / weight
-        )
+        )%>% 
+        select(-total)
       
     })
     
@@ -196,20 +200,44 @@ mod_tab_explore_server <- function(id, consumption){
         mutate(
           gr_day = total,
           gr_day_kg_bw = total / weight
-        )
+        ) %>% 
+        select(-total)
+      
+    })
+    
+    
+    
+    individual <- reactive({
+      
+      dta <- if(input$exposure_type == "Chronic") chronic() else acute()
+      
+      tbl <- 
+        dta %>% 
+        mutate(
+          across(where(is.numeric), ~round(., input$digits))
+        ) 
+      
+      tbl %>% 
+        rename(!!!unlist(keep(labels_list, ~ .x %in% names(tbl))))
+      
       
     })
     
     output$individual <- renderReactable({
       
-      dta <- if(input$exposure_type == "Chronic") chronic() else acute()
-      
-      reactable(dta)
+      individual() %>% 
+        reactable(
+          searchable = TRUE
+        )
       
     })
     
     
+    
+    
     tbl_by_demo <- reactive({
+      
+      validate(need(consumption(), "No data uploaded"))
       
       if(length(food_items()) == 0) {
         
@@ -222,9 +250,6 @@ mod_tab_explore_server <- function(id, consumption){
         dta %>% 
         group_by(across(any_of(input$group_var))) %>% 
         summarise(across(any_of(input$per_day_type), aggregate_summary, .names = "{fn}")) %>% 
-        mutate(
-          across(-any_of(input$group_var), ~round(., 2))
-        ) %>% 
         ungroup()
       
       
@@ -249,10 +274,7 @@ mod_tab_explore_server <- function(id, consumption){
       tbl <- 
         tbl %>% 
         mutate(pct_cons = consumers / population, .after = consumers) %>% 
-        mutate(pct_cons = percent(pct_cons, 0.01)) %>% 
-        mutate(
-          across(where(is.numeric), ~round(., 2))
-        ) 
+        mutate(pct_cons = percent(pct_cons, 0.01)) 
       
       # rename the columns for better presentation
       # what a messy code here.. 
@@ -263,25 +285,31 @@ mod_tab_explore_server <- function(id, consumption){
     
     output$tbl_by_demo <- renderReactable({
       
-      reactable(tbl_by_demo())
+      tbl_by_demo() %>% 
+        mutate(
+          across(where(is.numeric), ~round(., input$digits))
+        ) %>% 
+        reactable(
+          searchable = TRUE
+        )
       
       
     })
-    
     
     
     output$title_table <- renderUI({
       
       
       if(!isTruthy(input$group_var)) {
-        demo <- "Overall"
+        demo <- "-Overall-"
         
       } else {
         
         demo <- 
-          paste0("per ",
+          paste0("- by ",
                  names(keep(labels_list, ~.x %in% input$group_var)) %>% 
                    glue::glue_collapse(sep = ", ", last = " and ")
+                 , " -"
           )
       }
       
@@ -300,6 +328,26 @@ mod_tab_explore_server <- function(id, consumption){
       )
       
     })
+    
+    output$title_individual <- renderUI({
+      
+      tbl_title <- 
+        glue::glue(
+          "Individual Consumption - {input$exposure_type}" # - {input$aggregation_type} based
+        )
+      
+      tagList(
+        h3(tbl_title),
+        br()
+      )
+      
+    })
+    
+    
+    
+    
+    
+    
     
   })
 }
