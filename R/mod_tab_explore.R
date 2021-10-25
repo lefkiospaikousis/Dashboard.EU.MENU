@@ -25,25 +25,25 @@ mod_tab_explore_ui <- function(id){
         selectInput(ns("group_var"), "Select demographic", 
                     multiple = TRUE,  
                     choices = c("gender", "pop_class", "area"),
-                    selected = ""
+                    selected = "gender"
         ),
       )
     ),
     
     fluidRow(
       tabBox(id = ns("tabs_explore"), width = 12,
-        tabPanel(title = "Statistics",
-                 h4("Aggregated statistics"),
-                 #mod_downloadTable_ui(ns("tbl_data_description")),
-                 reactableOutput(ns("tbl_by_demo"))
-        ),
-        tabPanel(title = "Individual",
-                 h4("Individual mean consumption"),
-                 #p("The table shows what each column in the data represents"),
-                 #mod_downloadTable_ui(ns("tbl_data_description")),
-                 reactableOutput(ns("gr_per_day"))
-        )
-        )
+             tabPanel(title = "Statistics",
+                      h4("Aggregated statistics"),
+                      #mod_downloadTable_ui(ns("tbl_data_description")),
+                      reactableOutput(ns("tbl_by_demo"))
+             ),
+             tabPanel(title = "Individual",
+                      h4("Individual mean consumption"),
+                      #p("The table shows what each column in the data represents"),
+                      #mod_downloadTable_ui(ns("tbl_data_description")),
+                      reactableOutput(ns("individual"))
+             )
+      )
     )
     
     #DT::DTOutput(ns("tbl_consumption"))
@@ -96,7 +96,7 @@ mod_tab_explore_server <- function(id, consumption){
       
       consumption_sample %>% 
         distinct(subjectid, .keep_all = TRUE) %>% 
-        count(across(all_of(input$group_var)), name = "population")
+        count(across(any_of(input$group_var)), name = "population")
     }) 
     
     
@@ -106,7 +106,7 @@ mod_tab_explore_server <- function(id, consumption){
       consumption_sample %>% 
         filter(foodname %in% food_items()) %>% 
         distinct(subjectid, .keep_all = TRUE) %>% 
-        count(across(all_of(input$group_var)), name = "consumers")
+        count(across(any_of(input$group_var)), name = "consumers")
       
       
     })
@@ -117,7 +117,7 @@ mod_tab_explore_server <- function(id, consumption){
     
     # Per subject grams per day
     
-    gr_per_day <- reactive({
+    chronic <- reactive({
       
       consumption_sample %>% 
         {if(input$aggregation_type == "Consumers"){
@@ -125,7 +125,7 @@ mod_tab_explore_server <- function(id, consumption){
         } else {
           mutate(., amountfood = if_else(foodname %in% food_items(), amountfood, 0))
         }} %>% 
-        group_by(subjectid, across(all_of(input$group_var))) %>% 
+        group_by(subjectid, across(any_of(input$group_var))) %>% 
         summarise(total = sum(amountfood, na.rm = TRUE)) %>% 
         ungroup() %>% 
         left_join(tbl_n_days(), by = "subjectid") %>% 
@@ -137,48 +137,86 @@ mod_tab_explore_server <- function(id, consumption){
       
     })
     
-    output$gr_per_day <- renderReactable({
-      reactable(gr_per_day())
+    
+    acute <- reactive({
+      
+      consumption_sample %>% 
+        {if(input$aggregation_type == "Consumers"){
+          filter(., foodname %in% food_items())
+        } else {
+          mutate(., amountfood = if_else(foodname %in% food_items(), amountfood, 0))
+        }} %>% 
+        # group also by day for the acute
+        group_by(across(c(subjectid, any_of(input$group_var), day))) %>% 
+        summarise(total = sum(amountfood, na.rm = TRUE)) %>% 
+        ungroup() %>% 
+        #left_join(tbl_n_days(), by = "subjectid") %>% 
+        left_join(tbl_weight(), by = "subjectid") %>% 
+        # mutate(
+        #   total_kg_bw = total / weight
+        # ) %>% 
+        mutate(
+          gr_day = total,
+          gr_day_kg_bw = total / weight
+        )
+      
+    })
+    
+    output$individual <- renderReactable({
+      
+      if(input$exposure_type == "Chronic") {
+        
+        reactable(chronic())
+        
+      } else {
+        
+        reactable(acute())
+        
+      }
+      
     })
     
     
     
     tbl_by_demo <- reactive({
       
-      #req(input$group_var)
       
-      validate(need(input$group_var, "Select at least one demographic variable"))
+      if(input$exposure_type == "Chronic"){
+        
+        dta <- chronic ()
+        
+      } else {
+        
+        dta <- acute()
+      }
       
       aggregation <- 
-        gr_per_day() %>% 
-        group_by(across(all_of(input$group_var))) %>% 
-        summarise(across(all_of(input$per_day_type), aggregate_summary, .names = "{fn}")) %>% 
+        dta %>% 
+        group_by(across(any_of(input$group_var))) %>% 
+        summarise(across(any_of(input$per_day_type), aggregate_summary, .names = "{fn}")) %>% 
         mutate(
           across(-any_of(input$group_var), ~round(., 2))
         ) %>% 
         ungroup()
       
-      overall <- 
-        gr_per_day() %>% 
-        summarise(across(all_of(input$per_day_type), aggregate_summary, .names = "{fn}")) %>% 
-        mutate(
-          across(-any_of(input$group_var), ~round(., 2))
-        ) %>% 
-        ungroup()
       
-      # add the Population
-      
-      purrr::reduce(
-        list(
-          aggregation,
-          tbl_population(),
-          tbl_consumers()
-        ),
-        left_join,
-        by = input$group_var
+      if(!isTruthy(input$group_var)){
         
-      ) %>% 
-        bind_rows(overall)
+        bind_cols(tbl_population(), tbl_consumers(), aggregation) 
+        
+      } else {
+        
+        purrr::reduce(
+          list(
+            tbl_population(),
+            tbl_consumers(),
+            aggregation
+          ),
+          left_join,
+          by = input$group_var
+          
+        ) 
+      }
       
     })
     
