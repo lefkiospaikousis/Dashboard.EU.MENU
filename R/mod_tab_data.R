@@ -22,14 +22,11 @@ mod_tab_data_ui <- function(id){
                     h3("Participants in the food survey"), 
                     mod_downloadTable_ui(ns("participants")),
                     DT::dataTableOutput(ns("participants")) %>% with_spinner(),
-                    #div(id = ns("down_participants"))
            ),
            tabPanel(title = "Survey Samples",
                     h3("The FoodSurvey sample sizes"),
                     p("The tables show the sample size [% (N)] of participants"),
                     hr(),
-                    # selectInput(ns("row_var"), "Row var", choices = c("gender", "area", "pop_class")),
-                    # selectInput(ns("col_var"), "Row var", choices =  c("gender", "area", "pop_class")),
                     h4("Gender by Population class"),
                     mod_downloadTable_ui(ns("freq_gender_age")),
                     tableOutput(ns("freq_gender_age")),
@@ -136,8 +133,6 @@ mod_tab_data_server <- function(id){
           filter = "top"
         ) %>% 
         DT::formatRound ( c("Weight", "Age"), 1) 
-      #DT::formatRound ( c("gr_day", "gr_kbw_day"), 2) 
-      
     })
     
     
