@@ -11,7 +11,7 @@ mod_import_consumption_ui <- function(id){
   ns <- NS(id)
   tagList(
     actionButton(ns("import"), "Upload a new consumption file", width = "100%", 
-                 style = "white-space: normal; background:#8A2BE2; color:white ;margin-top: 8px;margin-bottom: 8px;"
+                 style = "white-space: normal; background:#5c90c4; color:white ;margin-top: 8px;margin-bottom: 8px;"
     )
   )
 }
