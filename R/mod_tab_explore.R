@@ -37,6 +37,9 @@ mod_tab_explore_ui <- function(id){
       shinyWidgets::dropdownButton(inputId = ns("options"), label = "",
                                    p(strong("Customise")),
                                    numericInput(ns("digits"), "Decimals", 2, 0, 10, 1),
+                                   radioButtons(ns("amount_food"), "Amount Food", 
+                                                choices = c("Raw" = "amountfood", "Cooked" = "amountfcooked")
+                                                ),
                                    circle = FALSE, status = "primary", 
                                    icon = icon("gear"), width = "100px",
                                    right = TRUE,
@@ -172,10 +175,10 @@ mod_tab_explore_server <- function(id, consumption){
         {if(input$aggregation_type == "Consumers"){
           filter(., foodname %in% food_items())
         } else {
-          mutate(., amountfood = if_else(foodname %in% food_items(), amountfood, 0))
+          mutate(., .data[[input$amount_food]] := if_else(foodname %in% food_items(), .data[[input$amount_food]], 0))
         }} %>% 
         group_by(subjectid, across(any_of(input$group_var))) %>% 
-        summarise(total = sum(amountfood, na.rm = TRUE)) %>% 
+        summarise(total = sum(.data[[input$amount_food]], na.rm = TRUE)) %>% 
         ungroup() %>% 
         left_join(tbl_n_days(), by = "subjectid") %>% 
         left_join(tbl_weight(), by = "subjectid") %>% 
@@ -194,11 +197,11 @@ mod_tab_explore_server <- function(id, consumption){
         {if(input$aggregation_type == "Consumers"){
           filter(., foodname %in% food_items())
         } else {
-          mutate(., amountfood = if_else(foodname %in% food_items(), amountfood, 0))
+          mutate(., .data[[input$amount_food]] := if_else(foodname %in% food_items(), .data[[input$amount_food]], 0))
         }} %>% 
         # group also by day for the acute
         group_by(across(c(subjectid, any_of(input$group_var), day))) %>% 
-        summarise(total = sum(amountfood, na.rm = TRUE)) %>% 
+        summarise(total = sum(.data[[input$amount_food]], na.rm = TRUE)) %>% 
         ungroup() %>% 
         left_join(tbl_weight(), by = "subjectid") %>% 
         mutate(
@@ -320,10 +323,11 @@ mod_tab_explore_server <- function(id, consumption){
       }
       
       grams_type <- names(keep(labels_list, ~ .x %in% input$per_day_type))
+      food_var <- if(input$amount_food == "amountfood") "Raw" else "Cooked"
       
       tbl_title <- 
         glue::glue(
-          "Descriptives ({grams_type}) - {input$exposure_type} consumption - {input$aggregation_type} based"
+          "Descriptives ({grams_type}) - {input$exposure_type} consumption - {food_var} food - {input$aggregation_type} based"
         )
       
       
