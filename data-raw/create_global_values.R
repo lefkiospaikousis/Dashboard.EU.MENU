@@ -114,6 +114,7 @@ labels_list <- list(
   "% of consumers" = "pct_cons",
   "Mean" = "mean",
   "Median" = "median",
+  "SD" = "sd",
   "95th percentile" = "p95",
   "Max"  = "max",
   "Min" = "min"
