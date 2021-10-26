@@ -1,0 +1,47 @@
+
+/* logo */
+        .skin-blue .main-header .logo {
+                              background-color: #1C4E80;
+                              }
+
+        /* logo when hovered */
+        .skin-blue .main-header .logo:hover {
+                              background-color: #1C4E80;
+                              }
+
+        /* navbar (rest of the header) */
+        .skin-blue .main-header .navbar {
+                              background-color: #1C4E80;
+                              }        
+
+        /* main sidebar */
+        /*.skin-blue .main-sidebar {
+                              background-color: #1C4E80;
+                              }*/
+
+        /* active selected tab in the sidebarmenu */
+        /*.skin-blue .main-sidebar .sidebar .sidebar-menu .active a{
+                              background-color: #ED394E;
+                              }*/
+
+        /* other links in the sidebarmenu */
+        /*.skin-blue .main-sidebar .sidebar .sidebar-menu a{
+                              background-color: #00ff00;
+                              color: #000000;
+                              }*/
+
+        /* other links in the sidebarmenu when hovered */
+         .skin-blue .main-sidebar .sidebar .sidebar-menu a:hover{
+                              background-color: #1C4E80;
+                              }
+        /* toggle button when hovered  */                    
+         .skin-blue .main-header .navbar .sidebar-toggle:hover{
+                              background-color: #819ab3;
+                              }
+                              
+        .skin-blue .sidebar-menu>.active>a, .skin-blue .sidebar-menu>li:hover>a {
+    color: #fff;
+    background: #1e282c;
+    border-left-color: #3c8dbc;
+    font-size: large;
+}
