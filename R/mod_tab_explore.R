@@ -88,13 +88,17 @@ mod_tab_explore_server <- function(id, consumption){
     
     output$filter_ui <- renderUI({
       
-      purrr::imap(filter_vars, ~ col_4(
-        make_filter(
-          var = consumption()[[.x]], id = .x, label = .y,  session = session
+      tagList(
+        h4('FIlter your dataset. Your selections will "add up"'),
+        p('Use this section to COMBINE food items, eg.select "Cow milk" and "Goat milk" to get the total milk consumption considering both of these items')
+        
+        , purrr::imap(filter_vars, ~ col_4(
+          make_filter(
+            var = consumption()[[.x]], id = .x, label = .y,  session = session
+          )
+        )
         )
       )
-      )
-      
     })
     
     
