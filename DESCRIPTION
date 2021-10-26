@@ -18,6 +18,7 @@ Imports:
     purrr,
     reactable,
     readxl,
+    rlang,
     scales,
     shiny (>= 1.6.0),
     shinycssloaders,
