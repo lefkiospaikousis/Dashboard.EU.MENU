@@ -472,7 +472,7 @@ mod_import_consumption_server <- function(id){
             ),
             shinyjs::hidden(
               div(id= ns("show_dta"),
-                  actionButton(ns("confirm_import"), "Import the data to ImproRisk", width = "100%", 
+                  actionButton(ns("confirm_import"), "Import the data to EU-MENU Dashboard", width = "100%", 
                                class = "btn btn-success",style = "margin-bottom: 8px; margin-top: 6px")
               )
             )
