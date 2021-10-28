@@ -444,13 +444,22 @@ mod_import_consumption_server <- function(id){
                   tags$li(strong("POP_CLASS"), ": The particpants's population class", a(href= "https://www.efsa.europa.eu/en/efsajournal/pub/3944", " according to (EFSA,2014) guidance."),  
                           " [Valid values: Infants, Toddlers, Other children, Adolescents, Adults, Elderly, Pregnant Women]"),
                   tags$li(strong("WCOEFF"), ": The weighting cooefficient of the participant for the representativeness in the population",
-                          a(href = "https://en.wikipedia.org/wiki/Weighted_arithmetic_mean#Frequency_weights", "See Frequency Weights"))
+                          a(href = "https://en.wikipedia.org/wiki/Weighted_arithmetic_mean#Frequency_weights", "See Frequency Weights")),
+                  tags$li(strong("ORFOODNAME"), ": The Original FoodName. Free text"),
+                  tags$li(strong("ENFOODNAME"), ": The food name in English. Free text"),
+                  tags$li(strong("ENRECIPEDESC"), ": The recipe description (if any). Free text [missing values are allowed]")
                 )
               ),
             )
             ,
             br(),
             fileInput(ns("consumption_file"), "Upload Consumption data", accept = ".xlsx", width = "100%"),
+            shinyjs::hidden(
+              div(id= ns("show_dta"),
+                  actionButton(ns("confirm_import"), "Import the data to EU-MENU Dashboard", width = "100%", 
+                               class = "btn btn-success",style = "margin-bottom: 8px; margin-top: 6px")
+              )
+            ),
             uiOutput(ns("inform_loss")),
             br(),
             hr(),
@@ -468,12 +477,6 @@ mod_import_consumption_server <- function(id){
                                          )
                                          
                   )
-              )
-            ),
-            shinyjs::hidden(
-              div(id= ns("show_dta"),
-                  actionButton(ns("confirm_import"), "Import the data to EU-MENU Dashboard", width = "100%", 
-                               class = "btn btn-success",style = "margin-bottom: 8px; margin-top: 6px")
               )
             )
             
