@@ -25,7 +25,7 @@ make_filter <- function(var, id, label = id, session) {
     
   } else if (is.character(var)) {
     
-    levs <- unique(na.omit(var))
+    levs <- unique(stats::na.omit(var))
     selectInput(ns(id), label, choices = levs, selected = "", multiple = TRUE)
     
   } else {
