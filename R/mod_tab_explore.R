@@ -169,37 +169,65 @@ mod_tab_explore_server <- function(id, consumption){
     
     # Per subject grams per day
     
-    chronic <- reactive({
-      
-      consumption() %>% 
-        {if(input$aggregation_type == "Consumers"){
-          filter(., foodname %in% food_items())
-        } else {
-          mutate(., .data[[input$amount_food]] := if_else(foodname %in% food_items(), .data[[input$amount_food]], 0))
-        }} %>% 
-        group_by(subjectid, across(any_of(input$group_var))) %>% 
-        summarise(total = sum(.data[[input$amount_food]], na.rm = TRUE)) %>% 
-        ungroup() %>% 
-        left_join(tbl_n_days(), by = "subjectid") %>% 
-        left_join(tbl_weight(), by = "subjectid") %>% 
-        mutate(
-          gr_day = total / n_days,
-          gr_day_kg_bw = total / n_days / weight
-        )%>% 
-        select(-total)
-      
-    })
-    
-    
     acute <- reactive({
       
-      consumption() %>% 
-        {if(input$aggregation_type == "Consumers"){
-          filter(., foodname %in% food_items())
-        } else {
-          mutate(., .data[[input$amount_food]] := if_else(foodname %in% food_items(), .data[[input$amount_food]], 0))
-        }} %>% 
-        # group also by day for the acute
+      dta <- switch (input$aggregation_type,
+                     
+                     Consumers  = {
+                       
+                       if(input$amount_food == "amountfood") {
+                         
+                         filter(consumption(), foodname %in% food_items())
+                         
+                       } else if (input$amount_food == "amountfcooked") {
+                         # COOKED - Rows with missing `amountfcooked` values need to be removed
+                         # Summing them later will result in total consumption = 0
+                         # and the consumers of the cooked food will be the same as all the consumers of the raw food
+                         # This way we distinguish the consumers of the cooked food
+                         filter(consumption(), !is.na(amountfcooked), foodname %in% food_items())
+                         
+                       } else {
+                         validate("Wrong variables")
+                       }
+                       
+                       
+                     },
+                     
+                     Population = {
+                       
+                       if(input$amount_food == "amountfood") {
+                         
+                         # Easy. I don;t filter the food combination, rather I keep the consumption for that
+                         # food combination and all other consumers set as consumption = 0
+                         consumption() %>% 
+                           mutate(across(all_of(input$amount_food), ~ if_else(foodname %in% food_items(), .x, 0)))
+                         
+                       } else if (input$amount_food == "amountfcooked") {
+                         # COOKED - 
+                         # Those who a) consumed the food and b) as cooked, will keep the amountfcooked. 
+                         # Rest get a zero consumption on the amountfcooked. 
+                         # Like all had the chance to consume the food as cooked but didn;t
+                         
+                         consumption() %>% 
+                           mutate(
+                             across(all_of(input$amount_food), ~ if_else(foodname %in% food_items() & !is.na(amountfcooked), .x, 0))
+                           )
+                         
+                       } else {
+                         validate("Wrong variables")
+                       }
+                       
+                       
+                       
+                     },
+                     
+                     validate("Something went wrong. Contact the app author. Wrong Aggregation Type")
+      )
+      
+      if(nrow(dta) == 0) validate("No consumers of this food combination")
+      
+      dta %>% 
+        # group also by `day` for the acute
         group_by(across(c(subjectid, any_of(input$group_var), day))) %>% 
         summarise(total = sum(.data[[input$amount_food]], na.rm = TRUE)) %>% 
         ungroup() %>% 
@@ -210,6 +238,81 @@ mod_tab_explore_server <- function(id, consumption){
         ) %>% 
         select(-total)
       
+    })
+    
+    
+    chronic <- reactive({
+      
+      
+      dta <- switch (input$aggregation_type,
+                     
+                     Consumers  = {
+                       
+                       if(input$amount_food == "amountfood") {
+                         
+                         filter(consumption(), foodname %in% food_items())
+                         
+                       } else if (input$amount_food == "amountfcooked") {
+                         # COOKED - Rows with missing `amountfcooked` values need to be removed
+                         # Summing them later will result in total consumption = 0
+                         # and the consumers of the cooked food will be the same as all the consumers of the raw food
+                         # This way we distinguish the consumers of the cooked food
+                         filter(consumption(), !is.na(amountfcooked), foodname %in% food_items())
+                         
+                       } else {
+                         validate("Wrong variables")
+                       }
+                       
+                       
+                     },
+                     
+                     Population = {
+                       
+                       if(input$amount_food == "amountfood") {
+                         
+                         # Easy. I don;t filter the food combination, rather I keep the consumption for that
+                         # food combination and all other consumers set as consumption = 0
+                         consumption() %>% 
+                           mutate(across(all_of(input$amount_food), ~ if_else(foodname %in% food_items(), .x, 0)))
+                         
+                       } else if (input$amount_food == "amountfcooked") {
+                         # COOKED - 
+                         # Those who a) consumed the food and b) as cooked, will keep the amountfcooked. 
+                         # Rest get a zero consumption on the amountfcooked. 
+                         # Like all had the chance to consume the food as cooked but didn;t
+                         
+                         consumption() %>% 
+                           mutate(
+                             across(all_of(input$amount_food), ~ if_else(foodname %in% food_items() & !is.na(amountfcooked), .x, 0))
+                           )
+                         
+                       } else {
+                         validate("Wrong variables")
+                       }
+                       
+                       
+                       
+                     },
+                     
+                     validate("Something went wrong. Contact the app author. Wrong Aggregation Type")
+      )
+      
+      if(nrow(dta) == 0) validate("No consumers of this food combination")
+      
+      
+      # Return
+      
+      dta %>% 
+        group_by(subjectid, across(any_of(input$group_var))) %>% 
+        summarise(total = sum(.data[[input$amount_food]], na.rm = TRUE)) %>% 
+        ungroup() %>% 
+        left_join(tbl_n_days(), by = "subjectid") %>% 
+        left_join(tbl_weight(), by = "subjectid") %>% 
+        mutate(
+          gr_day = total / n_days,
+          gr_day_kg_bw = total / n_days / weight
+        )%>% 
+        select(-total)
     })
     
     
@@ -367,3 +470,47 @@ mod_tab_explore_server <- function(id, consumption){
 
 ## To be copied in the server
 # mod_tab_explore_server("tab_explore_ui_1")
+
+
+# acute <- reactive({
+#   
+#   consumption() %>% 
+#     {if(input$aggregation_type == "Consumers"){
+#       filter(., foodname %in% food_items())
+#     } else {
+#       mutate(., .data[[input$amount_food]] := if_else(foodname %in% food_items(), .data[[input$amount_food]], 0))
+#     }} %>% 
+#     # group also by day for the acute
+#     group_by(across(c(subjectid, any_of(input$group_var), day))) %>% 
+#     summarise(total = sum(.data[[input$amount_food]], na.rm = TRUE)) %>% 
+#     ungroup() %>% 
+#     left_join(tbl_weight(), by = "subjectid") %>% 
+#     mutate(
+#       gr_day = total,
+#       gr_day_kg_bw = total / weight
+#     ) %>% 
+#     select(-total)
+#   
+# })
+
+
+# chronic <- reactive({
+#   
+#   consumption() %>% 
+#     {if(input$aggregation_type == "Consumers"){
+#       filter(., foodname %in% food_items())
+#     } else {
+#       mutate(., .data[[input$amount_food]] := if_else(foodname %in% food_items(), .data[[input$amount_food]], 0))
+#     }} %>% 
+#     group_by(subjectid, across(any_of(input$group_var))) %>% 
+#     summarise(total = sum(.data[[input$amount_food]], na.rm = TRUE)) %>% 
+#     ungroup() %>% 
+#     left_join(tbl_n_days(), by = "subjectid") %>% 
+#     left_join(tbl_weight(), by = "subjectid") %>% 
+#     mutate(
+#       gr_day = total / n_days,
+#       gr_day_kg_bw = total / n_days / weight
+#     )%>% 
+#     select(-total)
+#   
+# })
