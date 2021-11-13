@@ -37,9 +37,10 @@ mod_tab_explore_ui <- function(id){
       shinyWidgets::dropdownButton(inputId = ns("options"), label = "",
                                    p(strong("Customise")),
                                    numericInput(ns("digits"), "Decimals", 2, 0, 10, 1),
-                                   radioButtons(ns("amount_food"), "Amount Food", 
+                                   shinyjs::hidden(
+                                   radioButtons(ns("amount_food"), "Amount Food",
                                                 choices = c("Raw" = "amountfood", "Cooked" = "amountfcooked")
-                                                ),
+                                   )),
                                    circle = FALSE, status = "primary", 
                                    icon = icon("gear"), width = "100px",
                                    right = TRUE,
