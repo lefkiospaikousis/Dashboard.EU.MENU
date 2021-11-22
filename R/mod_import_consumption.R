@@ -137,7 +137,7 @@ mod_import_consumption_server <- function(id){
       if(all_good) {
         checks$new_consumption <- temp_data %>% 
           # keep only the nessescary columns & force type
-          select(all_of(vars_needed_consumptionFdx2)) %>% 
+          select(all_of(vars_needed_consumptionFdx2), any_of(c("FOODEX1_name", "foodex1_name"))) %>% 
           mutate(
             across(c(day, amountfood, amountfcooked, age, weight, wcoeff), as.numeric),
             across(c(serial, subjectid, foodexcode, gender, area, pop_class), as.character)

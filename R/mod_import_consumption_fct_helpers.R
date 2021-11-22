@@ -83,6 +83,7 @@ check_consumption_dataset <- function(dataset){
       orfoodname    = FALSE,
       enfoodname    = FALSE,
       enrecipedesc  = FALSE
+      #,foodex1_name  = FALSE
     ) %>% 
     mutate(
       serial = if_else(rowid %in% dups_serial, TRUE, FALSE)
@@ -92,7 +93,7 @@ check_consumption_dataset <- function(dataset){
   col_content <- 
     ind_dta %>% 
     select(-rowid) %>% 
-    summarise_all(sum) %>% 
+    summarise(across(-foodex1_name, sum)) %>% 
     tidyr::gather("Column",'Invalid Cases') %>%
     left_join(rule_valid_content, by = "Column") %>%
     relocate('Invalid Cases', .after= last_col()) %>%

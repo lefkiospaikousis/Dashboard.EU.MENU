@@ -87,7 +87,7 @@ mod_tab_explore_server <- function(id, consumption){
     
     
     # Name is the Label of the filter. Value must be the actual variable name
-    filter_vars <- keep(labels_list, ~ .x %in% c("foodname", "orfoodname", "enfoodname", "enrecipedesc"))
+    filter_vars <- keep(labels_list, ~ .x %in% c("foodname", "orfoodname", "enfoodname", "enrecipedesc", "foodex1_name"))
     
     
     output$filter_ui <- renderUI({
