@@ -396,8 +396,8 @@ mod_import_consumption_server <- function(id){
         # remove all empty
         checks$new_consumption %>% 
         filter(across(c(amountfood, area, serial, subjectid, foodexcode, age, pop_class, weight, wcoeff), ~!is.na(.))) %>% 
-        # add the  foodname
         mutate(termCode = stringr::str_extract(foodexcode,"^.{5}")) %>% 
+        # add the  foodname. I did not include it in the vars_needed_Fdx2. Maybe they have a wrong name there
         left_join(
           mtx_levels %>% select(termCode, foodname = termExtendedName)
           , by = "termCode"
@@ -424,7 +424,7 @@ mod_import_consumption_server <- function(id){
           tagList(
             #h3("The Consumption file specifications:"),
             shinydashboard::box(
-              solidHeader = TRUE,width = NULL, collapsible = TRUE, collapsed = TRUE, status = "warning",
+              solidHeader = TRUE,width = NULL, collapsible = TRUE, collapsed = FALSE, status = "warning",
               title = "The Consumption file specifications:",
               tags$ul(
                 tags$li(strong("Input data"), ": Consumption data with food consumption occasions at the participant level"),
