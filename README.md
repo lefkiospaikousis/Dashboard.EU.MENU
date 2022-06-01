@@ -15,3 +15,5 @@ dashboard
 -   Population and Sample based
 -   gr/ day or gr/ day per KG body weight
 -   Chronic or Acute consumption
+
+The app is [here](https://sglcy.shinyapps.io/Dashboard-EU_MENU/)
