@@ -12,6 +12,9 @@ mod_tab_explore_ui <- function(id){
   tagList(
     fluidRow(
       box(width = 5,
+          h4('Set the aggregation parameters'),
+          p('Set the aggregation parameters and optionally break down aggregation by a demographic'),
+          div(style = "height: 17px"),
           col_4(
             radioButtons(ns("aggregation_type"), "Aggregation Type", 
                          choices = c("Consumers", "Population"))
@@ -38,9 +41,9 @@ mod_tab_explore_ui <- function(id){
                                    p(strong("Customise")),
                                    numericInput(ns("digits"), "Decimals", 2, 0, 10, 1),
                                    shinyjs::hidden(
-                                   radioButtons(ns("amount_food"), "Amount Food",
-                                                choices = c("Raw" = "amountfood", "Cooked" = "amountfcooked")
-                                   )),
+                                     radioButtons(ns("amount_food"), "Amount Food",
+                                                  choices = c("Raw" = "amountfood", "Cooked" = "amountfcooked")
+                                     )),
                                    circle = FALSE, status = "primary", 
                                    icon = icon("gear"), width = "100px",
                                    right = TRUE,
@@ -50,19 +53,21 @@ mod_tab_explore_ui <- function(id){
     ),
     
     fluidRow(
-      tabBox(id = ns("tabs_explore"), width = 12,
+      #column(width = 8, offset = 2,
+      tabBox(id = ns("tabs_explore"), width = 11,
              tabPanel(title = "Statistics",
                       uiOutput(ns("title_table")),
                       mod_downloadTable_ui(ns("tbl_by_demo")),
-                      reactableOutput(ns("tbl_by_demo")) %>% with_spinner()
+                      reactableOutput(ns("tbl_by_demo")) 
              ),
              tabPanel(title = "Individual",
                       uiOutput(ns("title_individual")),
                       mod_downloadTable_ui(ns("individual")),
-                      reactableOutput(ns("individual")) %>% with_spinner()
+                      reactableOutput(ns("individual")) 
              )
       )
     )
+    #)
     
   )
 }
@@ -93,7 +98,7 @@ mod_tab_explore_server <- function(id, consumption){
     output$filter_ui <- renderUI({
       
       tagList(
-        h4('FIlter your dataset. Your selections will "add up"'),
+        h4('Filter your dataset. Your selections will "add up"'),
         p('Use this section to COMBINE food items, eg.select "Cow milk" and "Goat milk" to get the total milk consumption considering both of these items')
         
         , purrr::imap(filter_vars, ~ col_4(
@@ -340,7 +345,7 @@ mod_tab_explore_server <- function(id, consumption){
       
       individual() %>% 
         reactable(
-          searchable = TRUE
+          searchable = TRUE, fullWidth = FALSE
         )
       
     })
@@ -403,7 +408,7 @@ mod_tab_explore_server <- function(id, consumption){
           across(where(is.numeric), ~round(., input$digits))
         ) %>% 
         reactable(
-          searchable = TRUE
+          searchable = TRUE, fullWidth = FALSE
         )
       
       
