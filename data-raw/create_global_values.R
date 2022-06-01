@@ -16,7 +16,8 @@ fdx2_chain_hierararchy <- readRDS(paste0(path, "fdx2_chain_hierarchy.rds"))
 mtx_levels             <- fdx2_chain_code[c("termCode", "termExtendedName" ,"depth")]
 fdx2_list_simple       <- readRDS(paste0(path, "fdx2_list_simple.rds"))
 fdx2_list_explicit     <- readRDS(paste0(path, "fdx2_list_explicit.rds"))
-fdx2_tree              <- readRDS(paste0(path, "fdx2_tree.rds")) 
+#fdx2_tree              <- readRDS(paste0(path, "fdx2_tree.rds")) 
+
 
 # FACET
 cooking_facets <- 
@@ -62,8 +63,29 @@ vars_needed_RawOccurrence <- c("foodex2", "res_num", "lod", "t_uom")
 
 # SAMPLE DATASETS. READY FOR SHINY APP ------------------------------------
 
-consumption_sample <- readRDS("../Data/Consumption_EUMENU-FDX2-LOT1_sample.rds") %>% 
-                         rename_all(tolower)
+consumption_sample <- readRDS(paste0(path, "Consumption_EUMENU-FDX2-LOT1_sample.rds")) 
+
+# consumption_sample <- readxl::read_xlsx(paste0(path, "Consumption_EUMENU-FDX2-LOT1_sample.xlsx"))
+# 
+# saveRDS(consumption_sample, paste0(path, "Consumption_EUMENU-FDX2-LOT1_sample.rds"))
+
+consumption_sample <- 
+  consumption_sample %>% 
+  rename_all(tolower) %>% 
+  select(all_of(vars_needed_consumptionFdx2), any_of(c("FOODEX1_name", "foodex1_name"))) %>% 
+  mutate(
+    across(c(day, amountfood, amountfcooked, age, weight, wcoeff), as.numeric),
+    across(c(serial, subjectid, foodexcode, gender, area, pop_class), as.character)
+  ) %>% 
+  filter(across(c(amountfood, area, serial, subjectid, foodexcode, age, pop_class, weight, wcoeff), ~!is.na(.))) %>% 
+  # add the  foodname. I did not inlude it in the vars_needed. Maybe they have a wrong name there
+  mutate(termCode = stringr::str_extract(foodexcode,"^.{5}")) %>% 
+  left_join(
+    mtx_levels %>% select(termCode, foodname = termExtendedName)
+    , by = "termCode"
+  ) %>% 
+  select(-termCode) %>% 
+  relocate(foodname, .after =  foodexcode)
 
 
 aggregate_summary <- list(
@@ -140,7 +162,7 @@ usethis::use_data(
   , vars_valid_consumption_foodex1
   , vars_needed_RawOccurrence
   , vars_needed_occurrenceFdx2
-  , fdx2_tree
+  #, fdx2_tree
   , efsa_pop_class
   , aggregate_summary
   , impro_colours
