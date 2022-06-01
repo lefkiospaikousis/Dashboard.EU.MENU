@@ -16,11 +16,12 @@
 app_server <- function( input, output, session ) {
   # Your application server logic 
   
+  #dta <- readxl::read_xlsx("")
   rv <- rv(
-    dta = NULL
+    dta = consumption_sample
   )
   
-  dta <- mod_tab_data_server("tab_data_ui_1")
+  dta <- mod_tab_data_server("tab_data_ui_1", reactive(rv$dta))
   
   observeEvent(dta$trigger, {
     

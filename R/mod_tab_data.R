@@ -52,7 +52,7 @@ mod_tab_data_ui <- function(id){
 #' data Server Functions
 #'
 #' @noRd 
-mod_tab_data_server <- function(id){
+mod_tab_data_server <- function(id, dta){
   moduleServer( id, function(input, output, session){
     ns <- session$ns
     
@@ -61,6 +61,8 @@ mod_tab_data_server <- function(id){
       trigger = 0
     )
     
+    # initialise
+    observe({ rv$dta <- dta() })
     
     callModule(mod_downloadTable_server, "dataset",
                table_name = "dataset",
@@ -87,7 +89,7 @@ mod_tab_data_server <- function(id){
       
       rv$dta <- dta$new_consumption
       rv$trigger <- rv$trigger + 1
-    })
+    }, ignoreInit = TRUE)
     
     
     output$consumption <- renderReactable({
