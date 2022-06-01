@@ -15,6 +15,8 @@ mod_tab_data_ui <- function(id){
            
            tabPanel(title = "Data", 
                     h3("Full consumption table"), 
+                    p(id = ns("info_sample"), style = "font-style: italic; color: #819ab3",
+                      "This is a sample dataset with fictitious data-Upload your own using the button above"),
                     mod_downloadTable_ui(ns("dataset")),
                     reactableOutput(ns("consumption")) %>% with_spinner()
            ),
@@ -89,6 +91,7 @@ mod_tab_data_server <- function(id, dta){
       
       rv$dta <- dta$new_consumption
       rv$trigger <- rv$trigger + 1
+      shinyjs::hideElement("info_sample", anim = TRUE)
     }, ignoreInit = TRUE)
     
     
@@ -99,7 +102,7 @@ mod_tab_data_server <- function(id, dta){
       rv$dta %>% 
         rename(!!!unlist(keep(labels_list, ~ .x %in% names(rv$dta)))) %>% 
         reactable(
-          searchable = TRUE
+          searchable = TRUE, height = 600, striped = TRUE, highlight = TRUE
         )
       
       
